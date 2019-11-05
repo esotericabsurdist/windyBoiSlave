@@ -1,60 +1,59 @@
-/*
- * Robert W. Mitchell
+/**
+ * Robert Mitchell
  * 
+ * Program turns powers on HC05 BlueTooth Master/Slave unit configured as Slave
+ * and listens for data on its TX pin. 
+ * 
+ * Depending on character recieved, loop() exclusively toggles two digital pins for relay 
+ * control of DC winch motor. Relays are switched on for a fixed time before reading 
+ * the next input.
  */
 
-/*
- * Robert Mitchell 
- * 10/23/2019
- * 
- */
-
-#include <SoftwareSerial.h>
-#define rxPin 0
-#define txPin 1
-#define baudrate 38400
-const int winchIn = 12;
-const int winchOut = 13;
+#define btvcc 7
+#define winchIn 11
+#define winchOut 12
 String msg;
 
-SoftwareSerial hc05(rxPin, txPin);
 
-// the setup function runs once when you press reset or power the board
 void setup() {
-  // Set up relay trigger pins. 
+  // Set up winch control pins.
+  // NOTICE: HIGH is used in place of LOW. 
+  //For unknown reasons, this board's digital pins are 0V for HIGH and 5V for LOW. This may be indicative of a problem on the board. 
+  digitalWrite(winchIn, HIGH);
+  digitalWrite(winchOut, HIGH);
   pinMode(winchIn, OUTPUT);
   pinMode(winchOut, OUTPUT);
-
-  // Initialize Bluetooth HC05 board as per board instructions:
-  delay(200);  
-  pinMode(rxPin,INPUT);
-  pinMode(txPin,OUTPUT);
-  Serial.begin(9600);
-  Serial.println("ENTER AT Commands:");
-  hc05.begin(baudrate);
- 
-}
-
-// the loop function runs over and over again forever
-void loop() {
-  readSerialPort();
-  if(msg!=""){
-    hc05.println(msg);
-  }
-  if (hc05.available()>0){
-    Serial.write(hc05.read());
-  }
-                    
-}
-
-void readSerialPort(){
-  msg="";
   
-  while (Serial.available()) {
-    delay(10);  
-    if (Serial.available() > 0) {
-      char c = Serial.read();  //gets one byte from serial buffer
-      msg += c; // makes the string readString
+  // Give everything a little time for soft start up.
+  delay(1000);
+
+  // Turn on BlueTooth and set baud rate for reading winch commands.
+  pinMode(btvcc, OUTPUT);
+  digitalWrite(btvcc, HIGH); // For unknown reasons this pin operates normally. HIGH corresponds to 5V, LOW to 0V.
+  Serial.begin(9600); // HC05 is configured out of the box to run at 9600 for transparent mode.
+}
+
+void loop() {
+  delay(100); // Run Winch for 10th of a second before checking for next instruction.
+  if (Serial.available()) {
+    char recievedData = Serial.read(); // Read any character found. 
+    if (recievedData == 'i') {
+      // IN
+      digitalWrite(winchIn, HIGH);
+      digitalWrite(winchOut, LOW);
+    } else if (recievedData == 'o') {
+      // OUT
+      digitalWrite(winchIn, LOW);
+      digitalWrite(winchOut, HIGH);
     }
+    else {
+      // TURN WINCH OFF, We have an uknown character. 
+      digitalWrite(winchIn, HIGH);
+      digitalWrite(winchOut, HIGH);
+    }
+  } else {
+    // 
+    digitalWrite(winchIn, HIGH);
+    digitalWrite(winchOut, HIGH);
   }
 }

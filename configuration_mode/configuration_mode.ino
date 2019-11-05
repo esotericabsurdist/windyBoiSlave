@@ -2,6 +2,8 @@
  * Robert Mitchell 
  * 10/23/2019
  * 
+ * Allows for AT commands to be entered in Arduino IDE serial monitor.
+ * 
  */
 
 #include <SoftwareSerial.h>
