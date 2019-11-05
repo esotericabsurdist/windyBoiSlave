@@ -1,7 +1,7 @@
 /**
  * Robert Mitchell
  * 
- * Program turns powers on HC05 BlueTooth Master/Slave unit configured as Slave
+ * Program powers on HC05 BlueTooth Master/Slave unit configured as Slave
  * and listens for data on its TX pin. 
  * 
  * Depending on character recieved, loop() exclusively toggles two digital pins for relay 
@@ -10,8 +10,8 @@
  */
 
 #define btvcc 7
-#define winchIn 11
-#define winchOut 12
+#define winchIn 15 // Using analog pins as relay triggers.
+#define winchOut 14
 String msg;
 
 
@@ -24,17 +24,19 @@ void setup() {
   pinMode(winchIn, OUTPUT);
   pinMode(winchOut, OUTPUT);
   
-  // Give everything a little time for soft start up.
+  // Start up softly
   delay(1000);
 
   // Turn on BlueTooth and set baud rate for reading winch commands.
   pinMode(btvcc, OUTPUT);
   digitalWrite(btvcc, HIGH); // For unknown reasons this pin operates normally. HIGH corresponds to 5V, LOW to 0V.
   Serial.begin(9600); // HC05 is configured out of the box to run at 9600 for transparent mode.
+  
+  delay(1000);
 }
 
 void loop() {
-  delay(100); // Run Winch for 10th of a second before checking for next instruction.
+  delay(90); // Run Winch for fraction of a second before checking for next instruction.
   if (Serial.available()) {
     char recievedData = Serial.read(); // Read any character found. 
     if (recievedData == 'i') {
@@ -47,12 +49,12 @@ void loop() {
       digitalWrite(winchOut, HIGH);
     }
     else {
-      // TURN WINCH OFF, We have an uknown character. 
+      // TURN WINCH OFF, uknown character. 
       digitalWrite(winchIn, HIGH);
       digitalWrite(winchOut, HIGH);
     }
   } else {
-    // 
+    // TURN WINCH OFF, lack of input.
     digitalWrite(winchIn, HIGH);
     digitalWrite(winchOut, HIGH);
   }
