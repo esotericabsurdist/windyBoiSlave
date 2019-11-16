@@ -10,7 +10,7 @@
  */
 
 #define btvcc 7
-#define winchIn 15 // Using analog pins as relay triggers.
+#define winchIn 16 // Using analog pins as relay triggers.
 #define winchOut 14
 String msg;
 
@@ -36,7 +36,7 @@ void setup() {
 }
 
 void loop() {
-  delay(90); // Run Winch for fraction of a second before checking for next instruction.
+  delay(85); // Run Winch for fraction of a second before checking for next instruction. Relays have intrinsic switching speed that cannot be exceeded. 
   if (Serial.available()) {
     char recievedData = Serial.read(); // Read any character found. 
     if (recievedData == 'i') {
